@@ -71,6 +71,9 @@ public class DriverControlledOpMode extends LinearOpMode {
 
     private DcMotor loaderMotor;
 
+    private loaderOn;
+    private launcherOn;
+
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -108,6 +111,48 @@ public class DriverControlledOpMode extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            double y = gamepad1.right_stick_y;
+            double x = gamepad1.right_stick_x;
+            drive.drive(math.atan(y/x), math.sqrt(y*y+x*x), gamepad1.left_stick_y);
+
+            if(gamepad1.a) {
+                if(loaderOn) {
+                    loader.on();
+                    loaderOn = false;
+                }
+                else {
+                    loader.off();
+                    loaderOn = true;
+                }
+            }
+
+            if(gamepad1.b) {
+                if(launcherOn) {
+                    launcher.on();
+                    launcherOn = false;
+                }
+                else {
+                    launcher.off();
+                    launcherOn = true;
+                }
+            }
+
+            if(gamepad1.dpad_up) {
+                wgoal.raise();
+            }
+            if(gamepad1.dpad_down) {
+                wgoal.lower();
+            }
+            if(gamepad1.dpad_left) {
+                wgoal.open();
+            }
+            if(gamepad1.dpad_right) {
+                wgoal.close();
+            }
+
+            if(gamepad1.right_bumper) {
+                launcher.launch();
+            }
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());

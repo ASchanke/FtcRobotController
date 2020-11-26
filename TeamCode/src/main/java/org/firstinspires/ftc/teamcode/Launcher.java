@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -15,6 +16,7 @@ public class Launcher {
     }
 
     public void launch() {
+        motor.setDirection(DcMotorSimple.Direction.FORWARD);
         motor.setPower(1.0);
         servo.setPosition(1);
         timer.reset();

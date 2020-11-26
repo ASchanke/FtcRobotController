@@ -13,15 +13,21 @@ public class Launcher {
     public Launcher(Servo servo, DcMotor motor ) {
         this.servo = servo;
         this.motor = motor;
+        motor.setDirection(DcMotorSimple.Direction.FORWARD);
+    }
+    public void on() {
+        motor.setPower(1.0);
     }
 
     public void launch() {
-        motor.setDirection(DcMotorSimple.Direction.FORWARD);
-        motor.setPower(1.0);
         servo.setPosition(1);
         timer.reset();
         while(timer.milliseconds() < 2000){}
         servo.setPosition(0);
+
+    }
+
+    public void off() {
         motor.setPower(0.0);
     }
 

@@ -31,9 +31,11 @@ package org.firstinspires.ftc.teamcode;
         import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
         import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
         import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+        import com.qualcomm.robotcore.hardware.Servo;
         import com.qualcomm.robotcore.hardware.DcMotor;
         import com.qualcomm.robotcore.util.ElapsedTime;
         import com.qualcomm.robotcore.util.Range;
+        import java.lang.Math;
 
 
 /**
@@ -71,8 +73,8 @@ public class DriverControlledOpMode extends LinearOpMode {
 
     private DcMotor loaderMotor;
 
-    private loaderOn;
-    private launcherOn;
+    private boolean loaderOn;
+    private boolean launcherOn;
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -102,7 +104,7 @@ public class DriverControlledOpMode extends LinearOpMode {
 
         drive = new Drive(leftBackMotor, leftFrontMotor, rightBackMotor, rightFrontMotor);
         wgoal = new WobbleGoal(armServo, handServo);
-        launcher = new Launcher(launcherServo, launcherMotor);
+        launcher = new Launcher(launchServo, launchMotor);
         loader = new Loader(loaderMotor);
 
         // Wait for the game to start (driver presses PLAY)
@@ -113,7 +115,7 @@ public class DriverControlledOpMode extends LinearOpMode {
         while (opModeIsActive()) {
             double y = gamepad1.right_stick_y;
             double x = gamepad1.right_stick_x;
-            drive.drive(math.atan(y/x), math.sqrt(y*y+x*x), gamepad1.left_stick_y);
+            drive.drive(Math.atan(y/x), Math.sqrt(y*y+x*x), gamepad1.left_stick_y);
 
             if(gamepad1.a) {
                 if(loaderOn) {

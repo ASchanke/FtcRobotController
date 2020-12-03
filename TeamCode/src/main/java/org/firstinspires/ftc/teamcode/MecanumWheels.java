@@ -41,30 +41,16 @@ class MecanumWheels {
 
     // setters
     private void setFrontRightPower(double angle, double magnitude, double rotationalVelocity) {
-        frontRightPower = -(Math.sin(angle - (Math.PI/4.0) )) * magnitude - rotationalVelocity;
+        frontRightPower = (-(Math.sin(angle - (Math.PI/4.0) )) * magnitude - rotationalVelocity)/2;
     }
     private void setFrontLeftPower(double angle, double magnitude, double rotationalVelocity) {
-        frontLeftPower = Math.sin(angle + (Math.PI/4.0) ) * magnitude + rotationalVelocity;
+        frontLeftPower = (Math.sin(angle + (Math.PI/4.0) ) * magnitude + rotationalVelocity)/2;
     }
     private void setBackRightPower(double angle, double magnitude, double rotationalVelocity) {
-        backRightPower = -(Math.sin(angle + (Math.PI/4.0) )) * magnitude - rotationalVelocity;
+        backRightPower = (-(Math.sin(angle + (Math.PI/4.0) )) * magnitude - rotationalVelocity)/2;
     }
     private void setBackLeftPower(double angle, double magnitude, double rotationalVelocity) {
-        backLeftPower = Math.sin(angle - (Math.PI/4.0) ) * magnitude + rotationalVelocity;
-    }
-
-    // getters
-    private double getFrontRightPower() {
-        return frontRightPower;
-    }
-    private double getFrontLeftPower() {
-        return frontLeftPower;
-    }
-    private double getBackRightPower() {
-        return backRightPower;
-    }
-    private double getBackLeftPower() {
-        return backLeftPower;
+        backLeftPower = (Math.sin(angle - (Math.PI/4.0) ) * magnitude + rotationalVelocity)/2;
     }
 
 

@@ -1,0 +1,9 @@
+Check the rings for position A, B, or C.
+    Call vuforia function
+Drive forward until line.
+    Check color sensor stop
+Fire three shots.
+Drive to spot A, B, or C.
+    Predetermined movement at predetermined time
+Drop off the wobble goal.
+Back up and park on the line.

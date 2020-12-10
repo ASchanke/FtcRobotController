@@ -55,7 +55,7 @@ package org.firstinspires.ftc.teamcode;
 @Disabled
 public class DriverControlledOpMode extends LinearOpMode {
 
-    private MechanumWheels drive;
+    private MecanumWheels drive;
     private WobbleGoal wgoal;
     private Launcher launcher;
     private Loader loader;
@@ -102,7 +102,7 @@ public class DriverControlledOpMode extends LinearOpMode {
 
 
 
-        drive = new Drive(leftBackMotor, leftFrontMotor, rightBackMotor, rightFrontMotor);
+        drive = new MecanumWheels(leftBackMotor, leftFrontMotor, rightBackMotor, rightFrontMotor);
         wgoal = new WobbleGoal(armServo, handServo);
         launcher = new Launcher(launchServo, launchMotor);
         loader = new Loader(loaderMotor);

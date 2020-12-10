@@ -52,7 +52,6 @@ package org.firstinspires.ftc.teamcode;
  */
 
 @TeleOp(name="Driver OpMode", group="Linear Opmode")
-@Disabled
 public class DriverControlledOpMode extends LinearOpMode {
 
     private MechanumWheels drive;
@@ -115,7 +114,7 @@ public class DriverControlledOpMode extends LinearOpMode {
         while (opModeIsActive()) {
             double y = gamepad1.right_stick_y;
             double x = gamepad1.right_stick_x;
-            drive.drive(Math.atan(y/x), Math.sqrt(y*y+x*x), gamepad1.left_stick_y);
+            drive.drive(Math.atan(y/x)/(Math.PI/2), Math.sqrt(y*y+x*x), gamepad1.left_stick_y);
 
             if(gamepad1.a) {
                 if(loaderOn) {

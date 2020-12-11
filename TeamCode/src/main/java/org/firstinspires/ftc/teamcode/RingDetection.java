@@ -41,6 +41,8 @@ import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.List;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
+
 /**
  * This 2020-2021 OpMode illustrates the basics of using the TensorFlow Object Detection API to
  * determine the position of the Ultimate Goal game elements.
@@ -52,8 +54,6 @@ import java.util.List;
  * is explained below.
  */
 
-@TeleOp(name = "Concept: TensorFlow Object Detection Webcam", group = "Concept")
-@Disabled
 public class RingDetection {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
@@ -86,6 +86,9 @@ public class RingDetection {
      */
     private TFObjectDetector tfod;
 
+    private List<Recognition> updatedRecognitions;
+    private boolean detecting = false;
+
     public void startDetection() {
         // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
         // first.
@@ -110,27 +113,28 @@ public class RingDetection {
             //tfod.setZoom(2.5, 1.78);
         }
 
+        detecting = true;
 
-        if (opModeIsActive()) {
-            while (opModeIsActive()) {
-                if (tfod != null) {
-                    // getUpdatedRecognitions() will return null if no new information is available since
-                    // the last time that call was made.
-                    List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-                    if (updatedRecognitions != null) {
-                        telemetry.addData("# Object Detected", updatedRecognitions.size());
-                        // step through the list of recognitions and display boundary info.
-                        int i = 0;
-                        for (Recognition recognition : updatedRecognitions) {
-                            telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
-                            telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
-                                    recognition.getLeft(), recognition.getTop());
-                            telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
-                                    recognition.getRight(), recognition.getBottom());
+        while (detecting) {
+            if (tfod != null) {
+                // getUpdatedRecognitions() will return null if no new information is available since
+                // the last time that call was made.
+                updatedRecognitions = tfod.getUpdatedRecognitions();
+                /*
+                if (updatedRecognitions != null) {
+                    telemetry.addData("# Object Detected", updatedRecognitions.size());
+                    // step through the list of recognitions and display boundary info.
+                    int i = 0;
+                    for (Recognition recognition : updatedRecognitions) {
+                        telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
+                        telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                            recognition.getLeft(), recognition.getTop());
+                        telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                            recognition.getRight(), recognition.getBottom());
                         }
                         telemetry.update();
-                    }
                 }
+                */
             }
         }
 
@@ -139,6 +143,14 @@ public class RingDetection {
         }
     }
 
+    public void stopDetection() {
+        detecting = false;
+        tfod.shutdown();
+    }
+
+    public List<Recognition> getRecognitions() {
+        return updatedRecognitions;
+    }
     /**
      * Initialize the Vuforia localization engine.
      */

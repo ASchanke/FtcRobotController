@@ -24,7 +24,7 @@ public class Launcher {
         timer.reset();
         while(timer.milliseconds() < 2000){}
         servo.setPosition(0);
-
+        while(timer.milliseconds() < 2000){}//need to make this async so it doesnt interfere with other stuff
     }
 
     public void off() {

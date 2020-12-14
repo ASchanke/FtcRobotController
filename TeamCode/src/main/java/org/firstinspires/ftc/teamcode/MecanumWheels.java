@@ -22,9 +22,9 @@ class MecanumWheels {
     backLeft = leftBack;
     //sets the local motor's directions to forward
     frontLeft.setDirection(Direction.FORWARD);
-    frontRight.setDirection(Direction.FORWARD);
+    frontRight.setDirection(Direction.REVERSE);
     backLeft.setDirection(Direction.FORWARD);
-    backRight.setDirection(Direction.FORWARD);
+    backRight.setDirection(Direction.REVERSE);
     }
 
     // sets the 4 local to what Graber gives when the method is called

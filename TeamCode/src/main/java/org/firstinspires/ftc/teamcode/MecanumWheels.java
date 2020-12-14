@@ -21,9 +21,9 @@ class MecanumWheels {
     backRight = rightBack;
     backLeft = leftBack;
     //sets the local motor's directions to forward
-    frontLeft.setDirection(Direction.FORWARD);
+    frontLeft.setDirection(Direction.REVERSE);
     frontRight.setDirection(Direction.FORWARD);
-    backLeft.setDirection(Direction.FORWARD);
+    backLeft.setDirection(Direction.REVERSE);
     backRight.setDirection(Direction.FORWARD);
     }
 
@@ -41,13 +41,13 @@ class MecanumWheels {
 
     // setters
     private void setFrontRightPower(double angle, double magnitude, double rotationalVelocity) {
-        frontRightPower = (-(Math.sin(angle - (Math.PI/4.0) )) * magnitude - rotationalVelocity)/2;
+        frontRightPower = ((Math.sin(angle - (Math.PI/4.0) )) * magnitude - rotationalVelocity)/2;
     }
     private void setFrontLeftPower(double angle, double magnitude, double rotationalVelocity) {
         frontLeftPower = (Math.sin(angle + (Math.PI/4.0) ) * magnitude + rotationalVelocity)/2;
     }
     private void setBackRightPower(double angle, double magnitude, double rotationalVelocity) {
-        backRightPower = (-(Math.sin(angle + (Math.PI/4.0) )) * magnitude - rotationalVelocity)/2;
+        backRightPower = ((Math.sin(angle + (Math.PI/4.0) )) * magnitude - rotationalVelocity)/2;
     }
     private void setBackLeftPower(double angle, double magnitude, double rotationalVelocity) {
         backLeftPower = (Math.sin(angle - (Math.PI/4.0) ) * magnitude + rotationalVelocity)/2;

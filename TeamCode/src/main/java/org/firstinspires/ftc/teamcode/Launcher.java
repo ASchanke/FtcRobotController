@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Launcher {
@@ -10,7 +11,7 @@ public class Launcher {
     private ElapsedTime timer;
     private CRServo motor;
 
-    public Launcher(Servo servo, DcMotor motor ) {
+    public Launcher(Servo servo, CRServo motor ) {
         this.servo = servo;
         this.motor = motor;
         motor.setDirection(DcMotorSimple.Direction.FORWARD);

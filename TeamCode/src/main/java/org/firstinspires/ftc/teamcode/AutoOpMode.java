@@ -1,19 +1,21 @@
-package org.firstinspires.ftc.teamcode;
+/*package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.ColorSensor;
 import com.qualcomm.robotcore.util.Range;
 import java.lang.Math;
+
 
 //written for blue in position as shown in manual
 
 @TeleOp(name="Auto OpMode", group="Linear Opmode")
 public class AutoOpMode {
 
-    private MechanumWheels drive;
+    private MecanumWheels drive;
     private WobbleGoal wgoal;
     private Launcher launcher;
     private Loader loader;
@@ -62,9 +64,9 @@ public class AutoOpMode {
 
         loaderMotor = hardwareMap.get(DcMotor.class, "loaderMotor");
 
-        sensorColor = HardwareMap.colorSensor.get("sensorColor");
+        sensorColor = hardwareMap.colorSensor.get("sensorColor");
 
-        drive = new Drive(leftBackMotor, leftFrontMotor, rightBackMotor, rightFrontMotor);
+        drive = new MecanumWheels(leftBackMotor, leftFrontMotor, rightBackMotor, rightFrontMotor);
         wgoal = new WobbleGoal(armServo, handServo);
         launcher = new Launcher(launchServo, launchMotor);
         loader = new Loader(loaderMotor);
@@ -125,29 +127,30 @@ public class AutoOpMode {
             telemetry.update();
         }
 
-        // forward is true, back is false
-        public void driveUntilLine(boolean isRed, boolean direction) {
+    }
 
-            if (isRed) {
-                while (sensorColor.red() != RED){
-                    if (direction) {
-                        drive(Math.PI/2, 1, 0);
-                    }
-                    else {
-                        drive(Math.PI/2, -1, 0);
-                    }
+    // forward is true, back is false
+    public void driveUntilLine(boolean isRed, boolean direction) {
+
+        if (isRed) {
+            while (sensorColor.red() != RED){
+                if (direction) {
+                    drive(Math.PI/2, 1, 0);
+                }
+                else {
+                    drive(Math.PI/2, -1, 0);
                 }
             }
-            else {
-                while (sensorColor.blue() != BLUE) {
-                    if (direction) {
-                        drive(Math.PI/2, 1, 0);
-                    }
-                    else {
-                        drive(Math.PI/2, -1, 0);
-                    }
+        }
+        else {
+            while (sensorColor.blue() != BLUE) {
+                if (direction) {
+                    drive(Math.PI/2, 1, 0);
+                }
+                else {
+                    drive(Math.PI/2, -1, 0);
                 }
             }
         }
     }
-}
+}*/

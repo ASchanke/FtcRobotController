@@ -34,6 +34,8 @@ public class AutoOpMode {
     private boolean loaderOn;
     private boolean launcherOn;
 
+    private ColorSensor sensorColor;
+
     private RingDetection ringDetector;
 
     // Declare OpMode members.
@@ -60,7 +62,7 @@ public class AutoOpMode {
 
         loaderMotor = hardwareMap.get(DcMotor.class, "loaderMotor");
 
-
+        sensorColor = HardwareMap.colorSensor.get("sensorColor");
 
         drive = new Drive(leftBackMotor, leftFrontMotor, rightBackMotor, rightFrontMotor);
         wgoal = new WobbleGoal(armServo, handServo);
@@ -121,6 +123,31 @@ public class AutoOpMode {
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.update();
+        }
+
+        // forward is true, back is false
+        public void driveUntilLine(boolean isRed, boolean direction) {
+
+            if (isRed) {
+                while (sensorColor.red() != RED){
+                    if (direction) {
+                        drive(Math.PI/2, 1, 0);
+                    }
+                    else {
+                        drive(Math.PI/2, -1, 0);
+                    }
+                }
+            }
+            else {
+                while (sensorColor.blue() != BLUE) {
+                    if (direction) {
+                        drive(Math.PI/2, 1, 0);
+                    }
+                    else {
+                        drive(Math.PI/2, -1, 0);
+                    }
+                }
+            }
         }
     }
 }

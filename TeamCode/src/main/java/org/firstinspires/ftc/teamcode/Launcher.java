@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Launcher {
     private Servo servo;
     private ElapsedTime timer;
-    private DcMotor motor;
+    private CRServo motor;
 
     public Launcher(Servo servo, DcMotor motor ) {
         this.servo = servo;

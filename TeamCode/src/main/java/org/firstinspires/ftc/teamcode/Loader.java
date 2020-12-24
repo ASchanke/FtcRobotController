@@ -4,8 +4,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class Loader {
-    private DcMotor motor;
-    public Loader(DcMotor motor) {
+    private CRServo motor;
+    public Loader(CRServo motor) {
         this.motor = motor;
         motor.setDirection(DcMotorSimple.Direction.FORWARD);
         motor.setPower(0.0);

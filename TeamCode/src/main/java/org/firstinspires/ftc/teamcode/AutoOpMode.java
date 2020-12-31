@@ -1,11 +1,12 @@
-/*package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.ColorSensor;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.Range;
 import java.lang.Math;
 
@@ -13,7 +14,7 @@ import java.lang.Math;
 //written for blue in position as shown in manual
 
 @TeleOp(name="Auto OpMode", group="Linear Opmode")
-public class AutoOpMode {
+public class AutoOpMode extends LinearOpMode {
 
     private MecanumWheels drive;
     private WobbleGoal wgoal;
@@ -29,9 +30,9 @@ public class AutoOpMode {
     private Servo armServo;
 
     private Servo launchServo;
-    private DcMotor launchMotor;
+    private CRServo launchMotor;
 
-    private DcMotor loaderMotor;
+    private CRServo loaderMotor;
 
     private boolean loaderOn;
     private boolean launcherOn;
@@ -41,7 +42,7 @@ public class AutoOpMode {
     private RingDetection ringDetector;
 
     // Declare OpMode members.
-    private ElapsedTime runtime = new ElapsedTime();
+    private ElapsedTime timer = new ElapsedTime();
 
     @Override
     public void runOpMode() {
@@ -60,9 +61,9 @@ public class AutoOpMode {
         armServo = hardwareMap.get(Servo.class, "armServo");
 
         launchServo = hardwareMap.get(Servo.class, "launchServo");
-        launchMotor = hardwareMap.get(DcMotor.class, "launchMotor");
+        launchMotor = hardwareMap.get(CRServo.class, "launchMotor");
 
-        loaderMotor = hardwareMap.get(DcMotor.class, "loaderMotor");
+        loaderMotor = hardwareMap.get(CRServo.class, "loaderMotor");
 
         sensorColor = hardwareMap.colorSensor.get("sensorColor");
 
@@ -74,12 +75,13 @@ public class AutoOpMode {
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
-        runtime.reset();
+        timer.reset();
         ringDetector.startDetection();
         launcher.on();
         wgoal.raise();
 
         String ringPos = ringDetector.getPos();
+        //String ringPos = "A";
 
         driveUntilLine(false, true);//color - RED = true, direction - Forward = true
 
@@ -87,7 +89,7 @@ public class AutoOpMode {
         launcher.launch();
         launcher.launch();
 
-        if (ringPos = "A"){
+        if (ringPos == "A"){
             drive.drive(Math.PI/2, 1, 0);//7 feet forward
             timer.reset();
             while(timer.milliseconds() < 7000){}
@@ -96,7 +98,7 @@ public class AutoOpMode {
             while(timer.milliseconds() < 1000){}
             drive.drive(0, 0, 0);
         }
-        else if (ringPos = "B"){
+        else if (ringPos == "B"){
             drive.drive(Math.PI/2, 1, 0);//9 feet forward
             timer.reset();
             while(timer.milliseconds() < 9000){}
@@ -105,7 +107,7 @@ public class AutoOpMode {
             while(timer.milliseconds() < 0){}
             drive.drive(0, 0, 0);
         }
-        else if (ringPos = "C"){
+        else if (ringPos == "C"){
             drive.drive(Math.PI/2, 1, 0);//11 feet forward
             timer.reset();
             while(timer.milliseconds() < 11000){}
@@ -123,7 +125,7 @@ public class AutoOpMode {
         while (opModeIsActive()) {
 
             // Show the elapsed game time and wheel power.
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Status", "Run Time: " + timer.toString());
             telemetry.update();
         }
 
@@ -131,26 +133,27 @@ public class AutoOpMode {
 
     // forward is true, back is false
     public void driveUntilLine(boolean isRed, boolean direction) {
-
+        sensorColor.enableLed(true);
         if (isRed) {
-            while (sensorColor.red() != RED){
+            while (sensorColor.red() < 2){//test threshold
                 if (direction) {
-                    drive(Math.PI/2, 1, 0);
+                    drive.drive(Math.PI/2, 1, 0);
                 }
                 else {
-                    drive(Math.PI/2, -1, 0);
+                    drive.drive(Math.PI/2, -1, 0);
                 }
             }
         }
         else {
-            while (sensorColor.blue() != BLUE) {
+            while (sensorColor.blue() < 2) {//test threshold
                 if (direction) {
-                    drive(Math.PI/2, 1, 0);
+                    drive.drive(Math.PI/2, 1, 0);
                 }
                 else {
-                    drive(Math.PI/2, -1, 0);
+                    drive.drive(Math.PI/2, -1, 0);
                 }
             }
         }
+        sensorColor.enableLed(false);
     }
-}*/
+}

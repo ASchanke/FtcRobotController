@@ -114,8 +114,8 @@ public class DriverControlledOpMode extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             double y = gamepad1.right_stick_y;
-            double x = gamepad1.right_stick_x;
-            drive.drive(Math.atan2(y, x)+(Math.PI), Math.sqrt(y*y+x*x), gamepad1.left_stick_y);
+            double x = -gamepad1.right_stick_x;
+            drive.drive(Math.atan2(y, x)+(Math.PI), Math.sqrt(y*y+x*x)*2, gamepad1.left_stick_x*2);
 
             if(gamepad1.a) {
                 if(loaderOn) {

@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
         import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
         import com.qualcomm.robotcore.eventloop.opmode.Disabled;
         import com.qualcomm.robotcore.hardware.Servo;
+        import com.qualcomm.robotcore.hardware.CRServo;
         import com.qualcomm.robotcore.hardware.DcMotor;
         import com.qualcomm.robotcore.util.ElapsedTime;
         import com.qualcomm.robotcore.util.Range;
@@ -68,9 +69,9 @@ public class DriverControlledOpMode extends LinearOpMode {
     private Servo armServo;
 
     private Servo launchServo;
-    private DcMotor launchMotor;
+    private CRServo launchMotor;
 
-    private DcMotor loaderMotor;
+    private CRServo loaderMotor;
 
     private boolean loaderOn;
     private boolean launcherOn;
@@ -95,9 +96,9 @@ public class DriverControlledOpMode extends LinearOpMode {
         armServo = hardwareMap.get(Servo.class, "armServo");
 
         launchServo = hardwareMap.get(Servo.class, "launchServo");
-        launchMotor = hardwareMap.get(DcMotor.class, "launchMotor");
+        launchMotor = hardwareMap.get(CRServo.class, "launchMotor");
 
-        loaderMotor = hardwareMap.get(DcMotor.class, "loaderMotor");
+        loaderMotor = hardwareMap.get(CRServo.class, "loaderMotor");
 
 
 
@@ -114,7 +115,7 @@ public class DriverControlledOpMode extends LinearOpMode {
         while (opModeIsActive()) {
             double y = gamepad1.right_stick_y;
             double x = gamepad1.right_stick_x;
-            drive.drive(Math.atan2(y/x)+(Math.PI), Math.sqrt(y*y+x*x), gamepad1.left_stick_y);
+            drive.drive(Math.atan2(y, x)+(Math.PI), Math.sqrt(y*y+x*x), gamepad1.left_stick_y);
 
             if(gamepad1.a) {
                 if(loaderOn) {

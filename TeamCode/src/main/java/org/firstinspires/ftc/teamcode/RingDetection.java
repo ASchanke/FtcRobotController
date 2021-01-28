@@ -110,7 +110,7 @@ public class RingDetection {
             // (typically 1.78 or 16/9).
 
             // Uncomment the following line if you want to adjust the magnification and/or the aspect ratio of the input images.
-            //tfod.setZoom(2.5, 1.78);
+            tfod.setZoom(2.5, 1.78);
         }
 
         detecting = true;
@@ -179,5 +179,15 @@ public class RingDetection {
         tfodParameters.minResultConfidence = 0.8f;
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
+    }
+
+    public String getPos() {
+        String label = getRecognitions().get(0).getLabel();
+        if(label.equals("Quad")) {
+            return "C";
+        } else if (label.equals("Single")) {
+            return "B";
+        }
+        return "A";
     }
 }

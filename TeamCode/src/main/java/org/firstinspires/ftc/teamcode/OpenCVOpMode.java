@@ -36,6 +36,8 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import java.lang.reflect.Array;
+
 /*
  * This sample demonstrates a basic (but battle-tested and essentially
  * 100% accurate) method of detecting the skystone when lined up with
@@ -80,7 +82,12 @@ public class OpenCVOpMode extends LinearOpMode
 
         while (opModeIsActive())
         {
+            float[] data = pipeline.getDebug();
             telemetry.addData("Analysis", pipeline.getAnalysis());
+            telemetry.addData("Top Region Average", data[0]);
+            telemetry.addData("Middle Region Average", data[1]);
+            telemetry.addData("Bottom Region Average", data[2]);
+
             telemetry.update();
 
             // Don't burn CPU cycles busy-looping in this sample
@@ -90,14 +97,13 @@ public class OpenCVOpMode extends LinearOpMode
 
     public static class RingDeterminationPipeline extends OpenCvPipeline
     {
-        /*
-         * An enum to define the ring position
-         */
+
+        // How much each region has to be above the baseline region
+        float threshold = 10;
+
+        // An enum to define the ring number
         public enum RingNumber
         {
-            LEFT,
-            CENTER,
-            RIGHT,
             NONE,
             ONE,
             FOUR
@@ -108,15 +114,17 @@ public class OpenCVOpMode extends LinearOpMode
          */
         static final Scalar BLUE = new Scalar(0, 0, 255);
         static final Scalar GREEN = new Scalar(0, 255, 0);
+        static final Scalar ORANGE = new Scalar(255, 165, 0);
 
         /*
          * The core values which define the location and size of the sample regions
          */
         static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(60,80);
+        static final Point REGION1_BOTTOMRIGHT_ANCHOR_POINT = new Point(180,100);
         static final Point REGION2_TOPLEFT_ANCHOR_POINT = new Point(60,114);
-        //static final Point REGION3_TOPLEFT_ANCHOR_POINT = new Point(80,148);
-        static final int REGION_WIDTH = 120;
-        static final int REGION_HEIGHT = 34;
+        static final Point REGION2_BOTTOMRIGHT_ANCHOR_POINT = new Point(180,148);
+        static final Point REGION3_TOPLEFT_ANCHOR_POINT = new Point(60,200);
+        static final Point REGION3_BOTTOMRIGHT_ANCHOR_POINT = new Point(180,220);
 
         /*
          * Points which actually define the sample region rectangles, derived from above values
@@ -139,40 +147,40 @@ public class OpenCVOpMode extends LinearOpMode
                 REGION1_TOPLEFT_ANCHOR_POINT.x,
                 REGION1_TOPLEFT_ANCHOR_POINT.y);
         Point region1_pointB = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
+                REGION1_BOTTOMRIGHT_ANCHOR_POINT.x,
+                REGION1_BOTTOMRIGHT_ANCHOR_POINT.y);
         Point region2_pointA = new Point(
                 REGION2_TOPLEFT_ANCHOR_POINT.x,
                 REGION2_TOPLEFT_ANCHOR_POINT.y);
         Point region2_pointB = new Point(
-                REGION2_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION2_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-        /*Point region3_pointA = new Point(
+                REGION2_BOTTOMRIGHT_ANCHOR_POINT.x,
+                REGION2_BOTTOMRIGHT_ANCHOR_POINT.y);
+        Point region3_pointA = new Point(
                 REGION3_TOPLEFT_ANCHOR_POINT.x,
                 REGION3_TOPLEFT_ANCHOR_POINT.y);
         Point region3_pointB = new Point(
-                REGION3_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION3_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-        */
+                REGION3_BOTTOMRIGHT_ANCHOR_POINT.x,
+                REGION3_BOTTOMRIGHT_ANCHOR_POINT.y);
+
         /*
          * Working variables
          */
-        Mat region1_Cb, region2_Cb;//, region3_Cb;
+        Mat region1_Cr, region2_Cr, region3_Cr;
         Mat YCrCb = new Mat();
-        Mat Cb = new Mat();
-        int avg1, avg2;//, avg3;
+        Mat Cr = new Mat();
+        int avg1, avg2, avgBaseline;
 
         // Volatile since accessed by OpMode thread w/o synchronization
         private volatile RingNumber position = RingNumber.NONE;
 
         /*
          * This function takes the RGB frame, converts to YCrCb,
-         * and extracts the Cb channel to the 'Cb' variable
+         * and extracts the Cr channel to the 'Cr' variable
          */
-        void inputToCb(Mat input)
+        void inputToCr(Mat input)
         {
             Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cb, 2);
+            Core.extractChannel(YCrCb, Cr, 1);
         }
 
         @Override
@@ -187,16 +195,16 @@ public class OpenCVOpMode extends LinearOpMode
              * buffer would be re-allocated the first time a real frame
              * was crunched)
              */
-            inputToCb(firstFrame);
+            inputToCr(firstFrame);
 
             /*
              * Submats are a persistent reference to a region of the parent
              * buffer. Any changes to the child affect the parent, and the
              * reverse also holds true.
              */
-            region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
-            region2_Cb = Cb.submat(new Rect(region2_pointA, region2_pointB));
-            //region3_Cb = Cb.submat(new Rect(region3_pointA, region3_pointB));
+            region1_Cr = Cr.submat(new Rect(region1_pointA, region1_pointB));
+            region2_Cr = Cr.submat(new Rect(region2_pointA, region2_pointB));
+            region3_Cr = Cr.submat(new Rect(region3_pointA, region3_pointB));
         }
 
         @Override
@@ -240,7 +248,7 @@ public class OpenCVOpMode extends LinearOpMode
             /*
              * Get the Cb channel of the input frame after conversion to YCrCb
              */
-            inputToCb(input);
+            inputToCr(input);
 
             /*
              * Compute the average pixel value of each submat region. We're
@@ -249,9 +257,9 @@ public class OpenCVOpMode extends LinearOpMode
              * pixel value of the 3-channel image, and referenced the value
              * at index 2 here.
              */
-            avg1 = (int) Core.mean(region1_Cb).val[0];
-            avg2 = (int) Core.mean(region2_Cb).val[0];
-            //avg3 = (int) Core.mean(region3_Cb).val[0];
+            avg1 = (int) Core.mean(region1_Cr).val[0];
+            avg2 = (int) Core.mean(region2_Cr).val[0];
+            avgBaseline = (int) Core.mean(region3_Cr).val[0];
 
             /*
              * Draw a rectangle showing sample region 1 on the screen.
@@ -279,42 +287,26 @@ public class OpenCVOpMode extends LinearOpMode
              * Draw a rectangle showing sample region 3 on the screen.
              * Simply a visual aid. Serves no functional purpose.
              */
-            /*Imgproc.rectangle(
+            Imgproc.rectangle(
                     input, // Buffer to draw on
                     region3_pointA, // First point which defines the rectangle
                     region3_pointB, // Second point which defines the rectangle
                     BLUE, // The color the rectangle is drawn in
                     2); // Thickness of the rectangle lines
-            */
 
             /*
              * Find the max of the 3 averages
              */
             int maxOneTwo = Math.max(avg1, avg2);
-            int max = maxOneTwo;//.max(maxOneTwo, avg3);
+            int max = Math.max(maxOneTwo, avgBaseline);
 
             /*
              * Now that we found the max, we actually need to go and
              * figure out which sample region that value was from
              */
-            if(max == avg1) // Was it from region 1?
+            if(avg2-avgBaseline > threshold) // Is region 2 enough above the threshold?
             {
                 position = RingNumber.ONE; // Record our analysis
-
-                /*
-                 * Draw a solid rectangle on top of the chosen region.
-                 * Simply a visual aid. Serves no functional purpose.
-                 */
-                Imgproc.rectangle(
-                        input, // Buffer to draw on
-                        region1_pointA, // First point which defines the rectangle
-                        region1_pointB, // Second point which defines the rectangle
-                        GREEN, // The color the rectangle is drawn in
-                        -1); // Negative thickness means solid fill
-            }
-            else if(max == avg2) // Was it from region 2?
-            {
-                position = RingNumber.FOUR; // Record our analysis
 
                 /*
                  * Draw a solid rectangle on top of the chosen region.
@@ -327,8 +319,22 @@ public class OpenCVOpMode extends LinearOpMode
                         GREEN, // The color the rectangle is drawn in
                         -1); // Negative thickness means solid fill
             }
-            /*
-            else if(max == avg3) // Was it from region 3?
+            if(avg1-avgBaseline > threshold) // Is region 1 enough above the baseline?
+            {
+                position = RingNumber.FOUR; // Record our analysis
+
+                /*
+                 * Draw a solid rectangle on top of the chosen region.
+                 * Simply a visual aid. Serves no functional purpose.
+                 */
+                Imgproc.rectangle(
+                        input, // Buffer to draw on
+                        region1_pointA, // First point which defines the rectangle
+                        region1_pointB, // Second point which defines the rectangle
+                        ORANGE, // The color the rectangle is drawn in
+                        -1); // Negative thickness means solid fill
+            }
+            else if(!(avg2-avgBaseline > threshold)) // If neither hit the threshold
             {
                 position = RingNumber.NONE; // Record our analysis
 
@@ -341,13 +347,19 @@ public class OpenCVOpMode extends LinearOpMode
                         GREEN, // The color the rectangle is drawn in
                         -1); // Negative thickness means solid fill
             }
-            */
+
             /*
              * Render the 'input' buffer to the viewport. But note this is not
              * simply rendering the raw camera feed, because we called functions
              * to add some annotations to this buffer earlier up.
              */
             return input;
+        }
+
+        //Debug variables
+        public float[] getDebug() {
+            float[] data = {avg1, avg2, avgBaseline};
+            return data;
         }
 
         /*

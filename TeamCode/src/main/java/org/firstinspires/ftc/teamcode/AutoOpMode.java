@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -13,7 +14,7 @@ import java.lang.Math;
 
 //written for blue in position as shown in manual
 
-@TeleOp(name="Auto OpMode", group="Linear Opmode")
+@Autonomous(name="Auto OpMode", group="Linear Opmode")
 public class AutoOpMode extends LinearOpMode {
 
     private MecanumWheels drive;
@@ -89,7 +90,7 @@ public class AutoOpMode extends LinearOpMode {
         launcher.launch();
         launcher.launch();
 
-        if (ringPos == "A"){
+        if (ringPos.equals("A")){
             drive.drive(Math.PI/2, 1, 0);//7 feet forward
             timer.reset();
             while(timer.milliseconds() < 7000){}
@@ -98,7 +99,7 @@ public class AutoOpMode extends LinearOpMode {
             while(timer.milliseconds() < 1000){}
             drive.drive(0, 0, 0);
         }
-        else if (ringPos == "B"){
+        else if (ringPos.equals("B")){
             drive.drive(Math.PI/2, 1, 0);//9 feet forward
             timer.reset();
             while(timer.milliseconds() < 9000){}
@@ -107,7 +108,7 @@ public class AutoOpMode extends LinearOpMode {
             while(timer.milliseconds() < 0){}
             drive.drive(0, 0, 0);
         }
-        else if (ringPos == "C"){
+        else if (ringPos.equals("C")){
             drive.drive(Math.PI/2, 1, 0);//11 feet forward
             timer.reset();
             while(timer.milliseconds() < 11000){}

@@ -1,193 +1,347 @@
-/* Copyright (c) 2019 FIRST. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted (subject to the limitations in the disclaimer below) provided that
- * the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice, this list
- * of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright notice, this
- * list of conditions and the following disclaimer in the documentation and/or
- * other materials provided with the distribution.
- *
- * Neither the name of FIRST nor the names of its contributors may be used to endorse or
- * promote products derived from this software without specific prior written permission.
- *
- * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
- * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
-
-import java.util.List;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvInternalCamera;
+import org.openftc.easyopencv.OpenCvPipeline;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 
 /**
- * This 2020-2021 OpMode illustrates the basics of using the TensorFlow Object Detection API to
- * determine the position of the Ultimate Goal game elements.
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
- *
- * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
- * is explained below.
+ This class will start OpenCV, find out how many rings there are, and close the pipeline.
  */
 
 public class RingDetection {
-    private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
-    private static final String LABEL_FIRST_ELEMENT = "Quad";
-    private static final String LABEL_SECOND_ELEMENT = "Single";
 
-    /*
-     * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
-     * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
-     * A Vuforia 'Development' license key, can be obtained free of charge from the Vuforia developer
-     * web site at https://developer.vuforia.com/license-manager.
-     *
-     * Vuforia license keys are always 380 characters long, and look as if they contain mostly
-     * random data. As an example, here is a example of a fragment of a valid key:
-     *      ... yIgIzTqZ4mWjk9wd3cZO9T1axEqzuhxoGlfOOI2dRzKS4T0hQ8kT ...
-     * Once you've obtained a license key, copy the string from the Vuforia web site
-     * and paste it in to your code on the next line, between the double quotes.
-     */
-    private static final String VUFORIA_KEY =
-            " -- YOUR NEW VUFORIA KEY GOES HERE  --- ";
+    boolean detecting = false;
 
-    /**
-     * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
-     * localization engine.
-     */
-    private VuforiaLocalizer vuforia;
+    OpenCvInternalCamera phoneCam;
+    RingDeterminationPipeline pipeline;
 
-    /**
-     * {@link #tfod} is the variable we will use to store our instance of the TensorFlow Object
-     * Detection engine.
-     */
-    private TFObjectDetector tfod;
-
-    private List<Recognition> updatedRecognitions;
-    private boolean detecting = false;
+    String RingPos = "";
 
     public void startDetection() {
-        // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
-        // first.
-        initVuforia();
-        initTfod();
 
-        /**
-         * Activate TensorFlow Object Detection before we wait for the start command.
-         * Do it here so that the Camera Stream window will have the TensorFlow annotations visible.
-         **/
-        if (tfod != null) {
-            tfod.activate();
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
+        pipeline = new RingDeterminationPipeline();
+        phoneCam.setPipeline(pipeline);
 
-            // The TensorFlow software will scale the input images from the camera to a lower resolution.
-            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
-            // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
-            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
-            // should be set to the value of the images used to create the TensorFlow Object Detection model
-            // (typically 1.78 or 16/9).
+        // We set the viewport policy to optimized view so the preview doesn't appear 90 deg
+        // out when the RC activity is in portrait. We do our actual image processing assuming
+        // landscape orientation, though.
+        phoneCam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
 
-            // Uncomment the following line if you want to adjust the magnification and/or the aspect ratio of the input images.
-            tfod.setZoom(2.5, 1.78);
-        }
+        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            @Override
+            public void onOpened()
+            {
+                phoneCam.startStreaming(320,240, OpenCvCameraRotation.UPRIGHT);
+            }
+        });
 
         detecting = true;
 
         while (detecting) {
-            if (tfod != null) {
-                // getUpdatedRecognitions() will return null if no new information is available since
-                // the last time that call was made.
-                updatedRecognitions = tfod.getUpdatedRecognitions();
-                /*
-                if (updatedRecognitions != null) {
-                    telemetry.addData("# Object Detected", updatedRecognitions.size());
-                    // step through the list of recognitions and display boundary info.
-                    int i = 0;
-                    for (Recognition recognition : updatedRecognitions) {
-                        telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
-                        telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
-                            recognition.getLeft(), recognition.getTop());
-                        telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
-                            recognition.getRight(), recognition.getBottom());
-                        }
-                        telemetry.update();
-                }
-                */
+            RingDeterminationPipeline.RingNumber number = pipeline.getAnalysis();
+            if (number == RingDeterminationPipeline.RingNumber.NONE) {
+                RingPos = "A";
+            } else if (number == RingDeterminationPipeline.RingNumber.ONE) {
+                RingPos = "B";
+            } else if (number == RingDeterminationPipeline.RingNumber.FOUR) {
+                RingPos = "C";
             }
-        }
-
-        if (tfod != null) {
-            tfod.shutdown();
         }
     }
 
     public void stopDetection() {
         detecting = false;
-        tfod.shutdown();
-    }
-
-    public List<Recognition> getRecognitions() {
-        return updatedRecognitions;
-    }
-    /**
-     * Initialize the Vuforia localization engine.
-     */
-    private void initVuforia() {
-        /*
-         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
-         */
-        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
-
-        parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
-
-        //  Instantiate the Vuforia engine
-        vuforia = ClassFactory.getInstance().createVuforia(parameters);
-
-        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
-    }
-
-    /**
-     * Initialize the TensorFlow Object Detection engine.
-     */
-    private void initTfod() {
-        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
-                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
-        tfodParameters.minResultConfidence = 0.8f;
-        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
-        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
+        phoneCam.closeCameraDevice();
     }
 
     public String getPos() {
-        String label = getRecognitions().get(0).getLabel();
-        if(label.equals("Quad")) {
-            return "C";
-        } else if (label.equals("Single")) {
-            return "B";
+        return RingPos;
+    }
+
+    public static class RingDeterminationPipeline extends OpenCvPipeline
+    {
+
+        // How much each region has to be above the baseline region
+        float threshold = 10;
+
+        // An enum to define the ring number
+        public enum RingNumber
+        {
+            NONE,
+            ONE,
+            FOUR
         }
-        return "A";
+
+        /*
+         * Some color constants
+         */
+        static final Scalar BLUE = new Scalar(0, 0, 255);
+        static final Scalar GREEN = new Scalar(0, 255, 0);
+        static final Scalar ORANGE = new Scalar(255, 165, 0);
+
+        /*
+         * The core values which define the location and size of the sample regions
+         */
+        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(60,80);
+        static final Point REGION1_BOTTOMRIGHT_ANCHOR_POINT = new Point(180,100);
+        static final Point REGION2_TOPLEFT_ANCHOR_POINT = new Point(60,114);
+        static final Point REGION2_BOTTOMRIGHT_ANCHOR_POINT = new Point(180,148);
+        static final Point REGION3_TOPLEFT_ANCHOR_POINT = new Point(60,200);
+        static final Point REGION3_BOTTOMRIGHT_ANCHOR_POINT = new Point(180,220);
+
+        /*
+         * Points which actually define the sample region rectangles, derived from above values
+         *
+         * Example of how points A and B work to define a rectangle
+         *
+         *   ------------------------------------
+         *   | (0,0) Point A                    |
+         *   |                                  |
+         *   |                                  |
+         *   |                                  |
+         *   |                                  |
+         *   |                                  |
+         *   |                                  |
+         *   |                  Point B (70,50) |
+         *   ------------------------------------
+         *
+         */
+        Point region1_pointA = new Point(
+                REGION1_TOPLEFT_ANCHOR_POINT.x,
+                REGION1_TOPLEFT_ANCHOR_POINT.y);
+        Point region1_pointB = new Point(
+                REGION1_BOTTOMRIGHT_ANCHOR_POINT.x,
+                REGION1_BOTTOMRIGHT_ANCHOR_POINT.y);
+        Point region2_pointA = new Point(
+                REGION2_TOPLEFT_ANCHOR_POINT.x,
+                REGION2_TOPLEFT_ANCHOR_POINT.y);
+        Point region2_pointB = new Point(
+                REGION2_BOTTOMRIGHT_ANCHOR_POINT.x,
+                REGION2_BOTTOMRIGHT_ANCHOR_POINT.y);
+        Point region3_pointA = new Point(
+                REGION3_TOPLEFT_ANCHOR_POINT.x,
+                REGION3_TOPLEFT_ANCHOR_POINT.y);
+        Point region3_pointB = new Point(
+                REGION3_BOTTOMRIGHT_ANCHOR_POINT.x,
+                REGION3_BOTTOMRIGHT_ANCHOR_POINT.y);
+
+        /*
+         * Working variables
+         */
+        Mat region1_Cr, region2_Cr, region3_Cr;
+        Mat YCrCb = new Mat();
+        Mat Cr = new Mat();
+        int avg1, avg2, avgBaseline;
+
+        // Volatile since accessed by OpMode thread w/o synchronization
+        private volatile RingDeterminationPipeline.RingNumber position = RingDeterminationPipeline.RingNumber.NONE;
+
+        /*
+         * This function takes the RGB frame, converts to YCrCb,
+         * and extracts the Cr channel to the 'Cr' variable
+         */
+        void inputToCr(Mat input)
+        {
+            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
+            Core.extractChannel(YCrCb, Cr, 1);
+        }
+
+        @Override
+        public void init(Mat firstFrame)
+        {
+            /*
+             * We need to call this in order to make sure the 'Cb'
+             * object is initialized, so that the submats we make
+             * will still be linked to it on subsequent frames. (If
+             * the object were to only be initialized in processFrame,
+             * then the submats would become delinked because the backing
+             * buffer would be re-allocated the first time a real frame
+             * was crunched)
+             */
+            inputToCr(firstFrame);
+
+            /*
+             * Submats are a persistent reference to a region of the parent
+             * buffer. Any changes to the child affect the parent, and the
+             * reverse also holds true.
+             */
+            region1_Cr = Cr.submat(new Rect(region1_pointA, region1_pointB));
+            region2_Cr = Cr.submat(new Rect(region2_pointA, region2_pointB));
+            region3_Cr = Cr.submat(new Rect(region3_pointA, region3_pointB));
+        }
+
+        @Override
+        public Mat processFrame(Mat input)
+        {
+            /*
+             * Overview of what we're doing:
+             *
+             * We first convert to YCrCb color space, from RGB color space.
+             * Why do we do this? Well, in the RGB color space, chroma and
+             * luma are intertwined. In YCrCb, chroma and luma are separated.
+             * YCrCb is a 3-channel color space, just like RGB. YCrCb's 3 channels
+             * are Y, the luma channel (which essentially just a B&W image), the
+             * Cr channel, which records the difference from red, and the Cb channel,
+             * which records the difference from blue. Because chroma and luma are
+             * not related in YCrCb, vision code written to look for certain values
+             * in the Cr/Cb channels will not be severely affected by differing
+             * light intensity, since that difference would most likely just be
+             * reflected in the Y channel.
+             *
+             * After we've converted to YCrCb, we extract just the 2nd channel, the
+             * Cr channel. We then take the average pixel value of 3 different regions on that Cr
+             * channel.
+             *
+             * We also draw rectangles on the screen showing where the sample regions
+             * are, as well as drawing a solid rectangle over top the sample region
+             * we believe is on top of the ring or the baseline region if there are no rings.
+             *
+             * In order for this whole process to work correctly, each sample region
+             * should be positioned in the center of each of the first 3 stones, and
+             * be small enough such that only the stone is sampled, and not any of the
+             * surroundings.
+             */
+
+            /*
+             * Get the Cb channel of the input frame after conversion to YCrCb
+             */
+            inputToCr(input);
+
+            /*
+             * Compute the average pixel value of each submat region. We're
+             * taking the average of a single channel buffer, so the value
+             * we need is at index 0. We could have also taken the average
+             * pixel value of the 3-channel image, and referenced the value
+             * at index 2 here.
+             */
+            avg1 = (int) Core.mean(region1_Cr).val[0];
+            avg2 = (int) Core.mean(region2_Cr).val[0];
+            avgBaseline = (int) Core.mean(region3_Cr).val[0];
+
+            /*
+             * Draw a rectangle showing sample region 1 on the screen.
+             * Simply a visual aid. Serves no functional purpose.
+             */
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    region1_pointA, // First point which defines the rectangle
+                    region1_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    2); // Thickness of the rectangle lines
+
+            /*
+             * Draw a rectangle showing sample region 2 on the screen.
+             * Simply a visual aid. Serves no functional purpose.
+             */
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    region2_pointA, // First point which defines the rectangle
+                    region2_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    2); // Thickness of the rectangle lines
+
+            /*
+             * Draw a rectangle showing sample region 3 on the screen.
+             * Simply a visual aid. Serves no functional purpose.
+             */
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    region3_pointA, // First point which defines the rectangle
+                    region3_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    2); // Thickness of the rectangle lines
+
+            /*
+             * Find the max of the 3 averages
+             */
+            int maxOneTwo = Math.max(avg1, avg2);
+            int max = Math.max(maxOneTwo, avgBaseline);
+
+            /*
+             * Now that we found the max, we actually need to go and
+             * figure out which sample region that value was from
+             */
+            if(avg2-avgBaseline > threshold) // Is region 2 enough above the threshold?
+            {
+                position = RingDeterminationPipeline.RingNumber.ONE; // Record our analysis
+
+                /*
+                 * Draw a solid rectangle on top of the chosen region.
+                 * Simply a visual aid. Serves no functional purpose.
+                 */
+                Imgproc.rectangle(
+                        input, // Buffer to draw on
+                        region2_pointA, // First point which defines the rectangle
+                        region2_pointB, // Second point which defines the rectangle
+                        GREEN, // The color the rectangle is drawn in
+                        -1); // Negative thickness means solid fill
+            }
+            if(avg1-avgBaseline > threshold) // Is region 1 enough above the baseline?
+            {
+                position = RingDeterminationPipeline.RingNumber.FOUR; // Record our analysis
+
+                /*
+                 * Draw a solid rectangle on top of the chosen region.
+                 * Simply a visual aid. Serves no functional purpose.
+                 */
+                Imgproc.rectangle(
+                        input, // Buffer to draw on
+                        region1_pointA, // First point which defines the rectangle
+                        region1_pointB, // Second point which defines the rectangle
+                        ORANGE, // The color the rectangle is drawn in
+                        -1); // Negative thickness means solid fill
+            }
+            else if(!(avg2-avgBaseline > threshold)) // If neither hit the threshold
+            {
+                position = RingDeterminationPipeline.RingNumber.NONE; // Record our analysis
+
+                //Draw a solid rectangle on top of the chosen region.
+                //Simply a visual aid. Serves no functional purpose.
+                Imgproc.rectangle(
+                        input, // Buffer to draw on
+                        region3_pointA, // First point which defines the rectangle
+                        region3_pointB, // Second point which defines the rectangle
+                        GREEN, // The color the rectangle is drawn in
+                        -1); // Negative thickness means solid fill
+            }
+
+            /*
+             * Render the 'input' buffer to the viewport. But note this is not
+             * simply rendering the raw camera feed, because we called functions
+             * to add some annotations to this buffer earlier up.
+             */
+            return input;
+        }
+
+        //Debug variables
+        public float[] getDebug() {
+            return new float[]{avg1, avg2, avgBaseline};
+        }
+
+        /*
+         * Call this from the OpMode thread to obtain the latest analysis
+         */
+        public RingDeterminationPipeline.RingNumber getAnalysis()
+        {
+            return position;
+        }
     }
 }

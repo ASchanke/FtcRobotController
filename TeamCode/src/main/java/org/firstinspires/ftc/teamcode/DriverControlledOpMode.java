@@ -60,7 +60,7 @@ public class DriverControlledOpMode extends LinearOpMode {
     private Launcher launcher;
     private Loader loader;
 
-    private DcMotor leftBackMotor;
+    private DcMotor launchMotor;
     private DcMotor leftFrontMotor;
     private DcMotor rightBackMotor;
     private DcMotor rightFrontMotor;
@@ -69,9 +69,12 @@ public class DriverControlledOpMode extends LinearOpMode {
     private Servo armServo;
 
     private Servo launchServo;
-    private CRServo launchMotor;
+    private CRServo leftBackMotor;
 
     private CRServo loaderMotor;
+    private CRServo loaderServo0;
+    private CRServo loaderServo1;
+
 
     private boolean loaderOn;
     private boolean launcherOn;
@@ -87,7 +90,7 @@ public class DriverControlledOpMode extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftBackMotor = hardwareMap.get(DcMotor.class, "leftBackMotor");
+        leftBackMotor = hardwareMap.get(CRServo.class, "launchMotor");
         leftFrontMotor = hardwareMap.get(DcMotor.class, "leftFrontMotor");
         rightBackMotor = hardwareMap.get(DcMotor.class, "rightBackMotor");
         rightFrontMotor = hardwareMap.get(DcMotor.class, "rightFrontMotor");
@@ -96,16 +99,18 @@ public class DriverControlledOpMode extends LinearOpMode {
         armServo = hardwareMap.get(Servo.class, "armServo");
 
         launchServo = hardwareMap.get(Servo.class, "launchServo");
-        launchMotor = hardwareMap.get(CRServo.class, "launchMotor");
+        launchMotor = hardwareMap.get(DcMotor.class, "leftBackMotor");
 
         loaderMotor = hardwareMap.get(CRServo.class, "loaderMotor");
+        loaderServo0 = hardwareMap.get(CRServo.class, "loaderServo0");
+        loaderServo1 = hardwareMap.get(CRServo.class, "loaderServo1");
 
 
 
         drive = new MecanumWheels(leftBackMotor, leftFrontMotor, rightBackMotor, rightFrontMotor);
         wgoal = new WobbleGoal(armServo, handServo);
         launcher = new Launcher(launchServo, launchMotor);
-        loader = new Loader(loaderMotor);
+        loader = new Loader(loaderMotor, loaderServo0, loaderServo1);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();

@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction;
 
@@ -11,10 +12,10 @@ class MecanumWheels {
     private double frontLeftPower = 0;
     private DcMotor backRight;
     private double backRightPower = 0;
-    private DcMotor backLeft;
+    private CRServo backLeft;
     private double backLeftPower = 0;
 
-    public MecanumWheels (DcMotor leftBack, DcMotor leftFront, DcMotor rightBack, DcMotor rightFront){
+    public MecanumWheels (CRServo leftBack, DcMotor leftFront, DcMotor rightBack, DcMotor rightFront){
     // sets the local motors to Graber's motors
     frontRight = rightFront;
     frontLeft = leftFront;

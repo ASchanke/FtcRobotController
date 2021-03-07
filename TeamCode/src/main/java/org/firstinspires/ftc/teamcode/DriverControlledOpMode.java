@@ -90,7 +90,7 @@ public class DriverControlledOpMode extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftBackMotor = hardwareMap.get(CRServo.class, "launchMotor");
+        leftBackMotor = hardwareMap.get(CRServo.class, "leftBackMotor");
         leftFrontMotor = hardwareMap.get(DcMotor.class, "leftFrontMotor");
         rightBackMotor = hardwareMap.get(DcMotor.class, "rightBackMotor");
         rightFrontMotor = hardwareMap.get(DcMotor.class, "rightFrontMotor");
@@ -99,7 +99,7 @@ public class DriverControlledOpMode extends LinearOpMode {
         armServo = hardwareMap.get(Servo.class, "armServo");
 
         launchServo = hardwareMap.get(Servo.class, "launchServo");
-        launchMotor = hardwareMap.get(DcMotor.class, "leftBackMotor");
+        launchMotor = hardwareMap.get(DcMotor.class, "launchMotor");
 
         loaderMotor = hardwareMap.get(CRServo.class, "loaderMotor");
         loaderServo0 = hardwareMap.get(CRServo.class, "loaderServo0");

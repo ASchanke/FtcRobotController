@@ -65,7 +65,6 @@ public class DriverControlledOpMode extends LinearOpMode {
     private DcMotor rightBackMotor;
     private DcMotor rightFrontMotor;
 
-    private Servo handServo;
     private Servo armServo;
 
     private Servo launchServo;
@@ -95,7 +94,7 @@ public class DriverControlledOpMode extends LinearOpMode {
         rightBackMotor = hardwareMap.get(DcMotor.class, "rightBackMotor");
         rightFrontMotor = hardwareMap.get(DcMotor.class, "rightFrontMotor");
 
-        handServo = hardwareMap.get(Servo.class, "handServo");
+
         armServo = hardwareMap.get(Servo.class, "armServo");
 
         launchServo = hardwareMap.get(Servo.class, "launchServo");
@@ -108,7 +107,7 @@ public class DriverControlledOpMode extends LinearOpMode {
 
 
         drive = new MecanumWheels(leftBackMotor, leftFrontMotor, rightBackMotor, rightFrontMotor);
-        wgoal = new WobbleGoal(armServo, handServo);
+        wgoal = new WobbleGoal(armServo);
         launcher = new Launcher(launchServo, launchMotor);
         loader = new Loader(loaderMotor, loaderServo0, loaderServo1);
 
@@ -149,12 +148,6 @@ public class DriverControlledOpMode extends LinearOpMode {
             }
             if(gamepad1.dpad_down) {
                 wgoal.lower();
-            }
-            if(gamepad1.dpad_left) {
-                wgoal.open();
-            }
-            if(gamepad1.dpad_right) {
-                wgoal.close();
             }
 
             if(gamepad1.right_bumper) {

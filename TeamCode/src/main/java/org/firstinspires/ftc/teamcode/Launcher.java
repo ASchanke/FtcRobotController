@@ -13,10 +13,11 @@ public class Launcher {
     private DcMotor motor;
     private DcMotor CRs;
 
-    public Launcher(Servo servo, DcMotor CRs ) {
+    public Launcher(Servo servo, DcMotor CRs) {
         this.servo = servo;
         this.CRs = CRs;
         CRs.setDirection(DcMotorSimple.Direction.FORWARD);
+        CRs.setPower(0.0);;
     }
     public void on() {
         CRs.setPower(1.0);
